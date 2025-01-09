@@ -1,3 +1,5 @@
+using Pkg
+Pkg.activate(abspath(@__DIR__, ".."))
 using ArgumentProcessor
 
 include("semmodel.jl")

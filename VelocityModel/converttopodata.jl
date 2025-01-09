@@ -22,10 +22,18 @@ function readasc(fn::AbstractString)
     return (cx, cy, cs, dat)
 end
 
-buffer = zeros(Float32, 3*6000-2, 3*6000-2)
+# ! Modify the 6 variables below according to downloaded block
+nblock_lat = 1
+iblock_lat_start = 7
+lat_range = (25.0, 30.0)
+nblock_lon = 1
+iblock_lon_start = 56
+lon_range = (95.0, 100.0)
 
-for ilon = 1:3, ilat = 1:3
-    fname = @sprintf("srtm_%d_%02d.asc", ilon+55, ilat+5)
+buffer = zeros(Float32, nblock_lat*5999+1, nblock_lon*5999+1)
+
+for ilon = 1:nblock_lon, ilat = 1:nblock_lat
+    fname = @sprintf("srtm_%d_%02d.asc", ilon+iblock_lon_start-1, ilat+iblock_lat_start-1)
     println(fname)
     slon = (ilon-1)*5999
     slat = (ilat-1)*5999
@@ -35,8 +43,8 @@ end
 
 data = -permutedims(buffer)./1000.0
 reverse!(data, dims=2)
-lat = range(start=20.0, stop=35.0, length=size(data, 2))
-lon = range(start=95.0, stop=110.0, length=size(data, 1))
+lat = range(start=lat_range[1], stop=lat_range[2], length=size(data, 2))
+lon = range(start=lon_range[1], stop=lon_range[2], length=size(data, 1))
 
 open("topography.bin", "w") do io
     write(io, Int32(length(lon)))
