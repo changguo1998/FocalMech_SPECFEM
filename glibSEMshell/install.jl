@@ -10,6 +10,9 @@ macro runcmd_noinfo(cmd)
     return :(run(pipeline(Cmd($cmd, dir=sem_exec_path), devnull); wait=true))
 end
 
+if !islink("sem-code/external_libs/scotch")
+    symlink(abspath("sem-code/external_libs/scotch_5.1.12b/"), abspath("sem-code/external_libs/scotch"), dir_target=true)
+end
 
 sem_exec_path = joinpath(@__DIR__, "semexec");
 if !isdir(sem_exec_path)
