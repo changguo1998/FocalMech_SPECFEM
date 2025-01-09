@@ -1,2 +1,2 @@
-# focal-mechanism-inversion-3d-topography
-Source code for focal mechanism inversion
+# FocalMech-SPECFEM
+Source code for focal mechanism inversion workflow
