@@ -1,2 +1,7 @@
 .vscode/
 glibSEMshell/NLLOCshell/NonLinLoc/*
+*.tar.gz
+VelocityModel/*.bin
+VelocityModel/*.zip
+VelocityModel/unpack/
+Manifest.toml
