@@ -2,24 +2,71 @@
 # station_range format:
 # station_name,station_lat,station_lon,glib_min_lat,glib_max_lat,glib_min_lon,glib_max_lon
 #
+
+function proc_multi(r1::AbstractFloat, r2::AbstractFloat, rh::AbstractFloat)
+    l = Tuple{Int,Int,Int,Int}[]
+    for p1 = 1:8, p2 = 1:8, m1 = 1:10, m2 = 1:10
+        h1 = r1/(p1*m1*8)
+        h2 = r2/(p2*m2*8)
+        if (max(h1, h2)/min(h1, h2) < 1.2) && (abs(sqrt(h1*h2)-rh) < 0.5)
+            push!(l, (p1, m1, p2, m2))
+        end
+    end
+    np = map(_x->_x[1]*_x[3], l)
+    return l[argmax(np)]
+end
+
+C0 = pi*6371.0/180.0
+
+cutmodeldir = abspath(@__DIR__, "..", "..", "VelocityModel")
+velmodelpath = abspath(@__DIR__, "..", "..", "VelocityModel", "CVM2.bin")
+
+basicRootDir = @__DIR__
 range_north = 50.0
 range_east = 50.0
 range_depth = 30.0
 pml_thickness = 5.0
+station_range = ["STATION" 30.0 100.0 28.0 32.0 98.0 102.0]
+
+margin = 10.0
+dt = 0.1
+fddh = 0.5
+dx = 5.0
+dz = 1.0
+npts = 1800
+rt = 1.0
+zmin = -8.0
+zmax = 100.0
+garea_dx = 0.5
+gdx = 2.0
+gdz = 1.0
+gzmax = 50.0
+mesh_h = 2.0
+
+s = 1 # index of station_range, useful when there are multiple stations.
+
+minx = (station_range[s, 4] - station_range[s, 2])*C0 - margin |> floor
+maxx = (station_range[s, 5] - station_range[s, 2])*C0 + margin |> ceil
+miny = (station_range[s, 6] - station_range[s, 3])*C0*cosd(station_range[s, 2]) - margin |> floor
+maxy = (station_range[s, 7] - station_range[s, 3])*C0*cosd(station_range[s, 2]) + margin |> ceil
+modelrange = [maxx-minx, maxy-miny, zmax]
+t = proc_multi(modelrange[1], modelrange[2], mesh_h)
+
+wkdir = abspath(pwd(), station_range[s, 1])
 
 config = Dict(
-    "wkdir" => abspath(pwd()),
-    "modelrange" => [range_north, range_east, range_depth],
+    "wkdir" => wkdir,
+    "modelrange" => modelrange,
     "pml" => [pml_thickness, pml_thickness, pml_thickness],
-    "srcloc" => [-minx, -miny, ceil(dp / dz) * dz],
+    "srcloc" => [-minx, -miny, 0.0],
     "srclat" => station_range[s, 2],
     "srclon" => station_range[s, 3],
-    "srcdep" => ceil(dp / dz) * dz,
+    "srcdep" => 0.0,
     "dt" => dt,
     "npts" => npts,
     "amp" => 1e10,
     "risetime" => rt,
-    "modelfile" => abspath(basicRootDir, station_range[s, 1], "model.bin"),
+    "modelfile" => abspath(wkdir, "model.bin"),
     "nproc_xi" => t[3],
     "nproc_eta" => t[1],
     "xi_multiply" => t[4],
@@ -52,22 +99,22 @@ for i = 1:narea_x, j = 1:narea_y
     ))
 end
 
-mkpath("../../dat/glib/" * station_range[s, 1])
-open(abspath("../../dat/glib/", station_range[s, 1], "setting.toml"), "w") do io
+mkpath(wkdir)
+open(abspath(wkdir, "setting.toml"), "w") do io
     TOML.print(io, config; sorted=true)
 end
 
 cmd1 = Cmd(["julia", "-t", "63", joinpath(cutmodeldir, "genmodel.jl"),
     "-D", string(zmax),
     "-H", string(-zmin),
-    "-M", "2",
-    "-O", abspath("../../dat/glib/", station_range[s, 1], "model.bin"),
+    "-M", velmodelpath,
+    "-O", abspath(wkdir, "model.bin"),
     "-R", join([minx, maxx, miny, maxy], '/'),
     "-N", join(round.(Int, [modelrange[1] / dx, modelrange[2] / dx, (zmax - zmin) / dz]), '/'),
     "-S", string(station_range[s, 2]) * "/" * string(station_range[s, 3])])
 println(cmd1)
 try
-    if !isdir(abspath(abspath("../../dat/glib/", station_range[s, 1], "model.bin")))
+    if !isdir(abspath(abspath(wkdir, "model.bin")))
         run(cmd1)
     end
 catch err

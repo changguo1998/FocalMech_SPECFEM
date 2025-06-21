@@ -48,7 +48,7 @@ for i = axes(table, 1)
     vs[iz, iy, ix] = table[i, 5]
 end
 
-open("SWChinaCVM2.0.sea_level.bin", "w") do io
+open("CVM2.bin", "w") do io
     write(io, Int32(length(lats)))
     write(io, Int32(length(lons)))
     write(io, Int32(length(deps)))
