@@ -1,4 +1,22 @@
-using Printf
+using Printf, Downloads
+
+function _srtm_get_par(io::IO, T::Type)
+    t = readline(io)
+    l = split(t, ' ', keepempty=false)
+    return parse(T, l[2])
+end
+
+function _read_asc_header(fn::String)
+    io = open(fn)
+    ncol = _srtm_get_par(io, Int)
+    nrow = _srtm_get_par(io, Int)
+    olon = _srtm_get_par(io, Float64)
+    olat = _srtm_get_par(io, Float64)
+    dd = _srtm_get_par(io, Float64)
+    nanvalue = _srtm_get_par(io, Float64)
+    close(io)
+    return (nrow, ncol, olat, olon, dd, nanvalue)
+end
 
 function readasc(fn::AbstractString)
     tls = readlines(fn)
@@ -22,13 +40,32 @@ function readasc(fn::AbstractString)
     return (cx, cy, cs, dat)
 end
 
-# ! Modify the 6 variables below according to downloaded block
-nblock_lat = 1
-iblock_lat_start = 7
-lat_range = (25.0, 30.0)
-nblock_lon = 1
-iblock_lon_start = 56
-lon_range = (95.0, 100.0)
+#
+ascfilelist = readdir(joinpath(@__DIR__, "unpack"))
+ascheaders = map(_f->_read_asc_header(joinpath(@__DIR__, "unpack", _f)), ascfilelist)
+
+lonidx = map(ascfilelist) do f
+    return parse(Int, f[6:7])
+end
+
+latidx = map(ascfilelist) do f
+    return parse(Int, f[9:10])
+end
+
+latlist = sort(unique(latidx))
+lonlist = sort(uno'nonique(lonidx))
+minlat = minimum(getindex.(ascheaders, 3))
+maxlat = maximum(getindex.(ascheaders, 3).+getindex.(ascheaders, 1) .* getindex.(ascheaders, 5))
+minlon = minimum(getindex.(ascheaders, 4))
+maxlon = maximum(getindex.(ascheaders, 4).+getindex.(ascheaders, 2) .* getindex.(ascheaders, 5))
+
+# Modify the 6 variables below according to downloaded block
+nblock_lat = length(latlist)
+iblock_lat_start = minimum(latlist)
+lat_range = (minlat, maxlat)
+nblock_lon = length(lonlist)
+iblock_lon_start = minimum(lonlist)
+lon_range = (minlon, maxlon)
 
 buffer = zeros(Float32, nblock_lat*5999+1, nblock_lon*5999+1)
 

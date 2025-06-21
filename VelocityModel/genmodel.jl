@@ -15,7 +15,8 @@ addopt!("maxelevation"; abbr="H", fmt=" %f", default=" 9.0", help="elevation of 
 addopt!("depth"; abbr="D", fmt=" %f", required=true, help="depth of bottom surface of model")
 addopt!("sample"; abbr="N", fmt=" %d/%d/%d", required=true,
         help="n sample in each direction. nlat/nlon/ndep or nx/ny/nz")
-addopt!("model"; abbr="M", fmt=" %d", required=true, help="1 CVM1.0; 2 CVM2.0")
+#addopt!("model"; abbr="M", fmt=" %d", required=true, help="1 CVM1.0; 2 CVM2.0")
+addopt!("model"; abbr="M", fmt=" %s", required=true, help="path/to/model.bin")
 
 input = ArgumentProcessor.parse(ARGS)
 
@@ -90,12 +91,17 @@ function writemodelbin(fn::AbstractString, vp::AbstractArray, vs::AbstractArray,
 end
 
 (latlist, lonlist, deplist, mvp, mvs) = let
-    if input.model == 1
-        io = open(joinpath(@__DIR__, "SWChinaCVM1.0.sea_level.bin"))
-    elseif input.model == 2
-        io = open(joinpath(@__DIR__, "SWChinaCVM2.0.sea_level.bin"))
+    # if input.model == 1
+    #     io = open(joinpath(@__DIR__, "SWChinaCVM1.0.sea_level.bin"))
+    # elseif input.model == 2
+    #     io = open(joinpath(@__DIR__, "SWChinaCVM2.0.sea_level.bin"))
+    # else
+    #     error("model type not correct. see help for more information.")
+    # end
+    if isfile(input.model)
+        io = open(abspath(input.model))
     else
-        error("model type not correct. see help for more information.")
+        error("model file $(input.model) not exist")
     end
     nlat = read(io, Int32)
     nlon = read(io, Int32)
@@ -204,11 +210,11 @@ Threads.@threads for idx in CartesianIndices(vp)
     end
 end
 
-if input.model == 1
-    println("Using velocity model: CVM1.0")
-else
-    println("Using velocity model: CVM2.0")
-end
+# if input.model == 1
+#     println("Using velocity model: CVM1.0")
+# else
+#     println("Using velocity model: CVM2.0")
+# end
 println("Model write to file: ", modelfile)
 writemodelbin(modelfile, vp, vs, rho, mindep,
               r0 * (maxlat - minlat) / (nlat - 1),

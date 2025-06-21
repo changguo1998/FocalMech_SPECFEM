@@ -58,3 +58,20 @@ downloaded block.
 
 This scripts is used to cut 3d model with topography from total model. Users can run
 `genmodel.jl -h` to see explainations for parameters
+
+### `download_srtm.jl`
+
+This script downloads srtm data according to specified range:
+
+```
+julia download_srtm.jl minlat maxlat minlon maxlon
+```
+
+## Steps
+
+1. Enter directory `VelocityModel`
+2. Run `download_srtm.jl` to download SRTM data
+3. Run `unzip_srtm.sh`
+4. Run `converttopodata.jl`
+5. Check if file `topography.bin` exists in `VelocityModel`
+6. Run `convertmodel_txt2bin.jl`

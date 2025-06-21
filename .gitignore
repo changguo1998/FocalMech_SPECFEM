@@ -4,5 +4,6 @@ glibSEMshell/NLLOCshell/NonLinLoc/*
 VelocityModel/*.bin
 VelocityModel/*.zip
 VelocityModel/unpack/
+VelocityModel/raw_data/
 VelocityModel/SWChinaCVM-V2.0-main/
 Manifest.toml
