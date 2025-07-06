@@ -15,7 +15,11 @@ function srtm_download_block(lat::Real, lon::Real)
     if !isfile(dat_s)
         @info "downloading block data $blockfilename"
         mkpath(joinpath(@__DIR__, "raw_data"))
-        Downloads.download(url_s, dat_s)
+        try
+            Downloads.download(url_s, dat_s)
+        catch
+            @error "Failed to download $blockfilename"
+        end
     end
     return nothing
 end
@@ -23,6 +27,7 @@ end
 if length(ARGS) < 4
     println("Usage:")
     println("    julia download_srtm.jl minlat maxlat minlon maxlon")
+    exit(0)
 end
 
 minlat = parse(Float64, ARGS[1])
