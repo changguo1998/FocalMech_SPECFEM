@@ -53,7 +53,7 @@ latidx = map(ascfilelist) do f
 end
 
 latlist = sort(unique(latidx))
-lonlist = sort(uno'nonique(lonidx))
+lonlist = sort(unique(lonidx))
 minlat = minimum(getindex.(ascheaders, 3))
 maxlat = maximum(getindex.(ascheaders, 3).+getindex.(ascheaders, 1) .* getindex.(ascheaders, 5))
 minlon = minimum(getindex.(ascheaders, 4))
@@ -72,6 +72,10 @@ buffer = zeros(Float32, nblock_lat*5999+1, nblock_lon*5999+1)
 for ilon = 1:nblock_lon, ilat = 1:nblock_lat
     fname = @sprintf("srtm_%d_%02d.asc", ilon+iblock_lon_start-1, ilat+iblock_lat_start-1)
     println(fname)
+    local fpath = joinpath(@__DIR__, "unpack", fname)
+    if !isfile(fpath)
+        continue
+    end
     slon = (ilon-1)*5999
     slat = (ilat-1)*5999
     (_, _, _, dat) = readasc(joinpath(@__DIR__, "unpack", fname))
