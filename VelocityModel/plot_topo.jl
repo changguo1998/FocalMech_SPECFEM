@@ -25,7 +25,7 @@ end
 close(io)
 
 # for test
-resampled_data[1:round(Int, size(resampled_data, 1)/2), 1:round(Int, size(resampled_data, 1)/2)] .= 10.0
+# resampled_data[1:round(Int, size(resampled_data, 1)/2), 1:round(Int, size(resampled_data, 1)/2)] .= 10.0
 
 fig = Figure(size=(round(Int, nlon * r0), round(Int, nlat * r0)));
 ax  = Axis(fig[1, 1], title="Topography", xlabel="Longitude (°E)", ylabel="Latitude (°N)");
