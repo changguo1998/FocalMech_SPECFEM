@@ -67,7 +67,7 @@ nblock_lon = length(lonlist)
 iblock_lon_start = minimum(lonlist)
 lon_range = (minlon, maxlon)
 
-buffer = zeros(Float32, nblock_lat*5999+1, nblock_lon*5999+1)
+buffer = fill(Float32(10000.0), nblock_lat*5999+1, nblock_lon*5999+1)
 
 for ilon = 1:nblock_lon, ilat = 1:nblock_lat
     fname = @sprintf("srtm_%d_%02d.asc", ilon+iblock_lon_start-1, ilat+iblock_lat_start-1)

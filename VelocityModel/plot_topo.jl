@@ -24,9 +24,13 @@ end
 
 close(io)
 
+# for test
+resampled_data[1:round(Int, size(resampled_data, 1)/2), 1:round(Int, size(resampled_data, 1)/2)] .= 10.0
+
 fig = Figure(size=(round(Int, nlon * r0), round(Int, nlat * r0)));
 ax  = Axis(fig[1, 1], title="Topography", xlabel="Longitude (°E)", ylabel="Latitude (°N)");
 
-hp = heatmap!(ax, lons[indexs_along_lon], lats[indexs_along_lat], resampled_data; colormap=:topo, colorrange=(-8.0, 8.0));
+hp = heatmap!(ax, lons[indexs_along_lon], lats[indexs_along_lat], resampled_data;
+    colormap=:topo, highclip=:red, colorrange=(-10.0, 9.9));
 Colorbar(fig[1,2], hp);
 save("topography.png", fig);
