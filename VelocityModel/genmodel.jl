@@ -4,6 +4,20 @@ using ArgumentProcessor
 
 include("semmodel.jl")
 
+function dens_vp_Gardner(vp::Real)
+    return 1.74*vp^0.25
+end
+
+function dens_vp_Nafe_Drake(vp::Real)
+    coef = [1.6612, -0.4721, 0.0671, -0.0043, 0.000106]
+    r = 0.0
+    for i = 1:5
+        r += coef[6-i]
+        r *= vp
+    end
+    return r
+end
+
 const r0 = π * 6371.0 / 180.0
 
 addopt!("output"; abbr="O", fmt=" %s", default=" " * joinpath(pwd(), "model.bin"),
@@ -189,7 +203,7 @@ end
 
 vp = zeros(Float32, ndep, nlon, nlat)
 vs = zeros(Float32, ndep, nlon, nlat)
-rho = fill(Float32(2.7), ndep, nlon, nlat)
+# rho = fill(Float32(2.7), ndep, nlon, nlat)
 isair = falses(ndep, nlon, nlat)
 Threads.@threads for idx in CartesianIndices(vp)
     (idep, ilon, ilat) = idx.I
@@ -209,6 +223,7 @@ Threads.@threads for idx in CartesianIndices(vp)
         vs[idx] = triplelinear(mvs, mdep, mlon, mlat, r, q, p)
     end
 end
+rho = dens_vp_Nafe_Drake.(vp)
 
 # if input.model == 1
 #     println("Using velocity model: CVM1.0")
