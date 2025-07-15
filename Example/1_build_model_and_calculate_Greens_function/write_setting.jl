@@ -3,6 +3,8 @@
 # station_name,station_lat,station_lon,glib_min_lat,glib_max_lat,glib_min_lon,glib_max_lon
 #
 
+using TOML
+
 function proc_multi(r1::AbstractFloat, r2::AbstractFloat, rh::AbstractFloat)
     l = Tuple{Int,Int,Int,Int}[]
     for p1 = 1:8, p2 = 1:8, m1 = 1:10, m2 = 1:10
@@ -21,10 +23,10 @@ C0 = pi*6371.0/180.0
 cutmodeldir = abspath(@__DIR__, "..", "..", "VelocityModel")
 velmodelpath = abspath(@__DIR__, "..", "..", "VelocityModel", "CVM2.bin")
 
-basicRootDir = @__DIR__
-range_north = 50.0
-range_east = 50.0
-range_depth = 30.0
+# basicRootDir = @__DIR__
+# range_north = 50.0
+# range_east = 50.0
+# range_depth = 30.0
 pml_thickness = 5.0
 station_range = ["STATION" 30.0 100.0 28.0 32.0 98.0 102.0]
 
@@ -82,7 +84,7 @@ narea_x = round(Int, (station_range[s, 5] - station_range[s, 4]) / garea_dx)
 narea_y = round(Int, (station_range[s, 7] - station_range[s, 6]) / garea_dx)
 p = 0
 for i = 1:narea_x, j = 1:narea_y
-    p += 1
+    global p += 1
     lat1 = station_range[s, 4] + garea_dx * (i - 1)
     lat2 = station_range[s, 4] + garea_dx * i
     lon1 = station_range[s, 6] + garea_dx * (j - 1)
