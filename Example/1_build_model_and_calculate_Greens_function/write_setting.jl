@@ -5,13 +5,19 @@
 
 using TOML
 
-function proc_multi(r1::AbstractFloat, r2::AbstractFloat, rh::AbstractFloat)
+function proc_multi(r1::AbstractFloat, r2::AbstractFloat, rh::AbstractFloat, ncores::Integer)
     l = Tuple{Int,Int,Int,Int}[]
-    for p1 = 1:8, p2 = 1:8, m1 = 1:10, m2 = 1:10
-        h1 = r1/(p1*m1*8)
-        h2 = r2/(p2*m2*8)
-        if (max(h1, h2)/min(h1, h2) < 1.2) && (abs(sqrt(h1*h2)-rh) < 0.5)
-            push!(l, (p1, m1, p2, m2))
+    m_max = ceil(Int, max(r1, r2)/rh/8)
+    for p1 = 1:ncores, p2 = 1:ncores
+        if p1*p2 > ncores
+            continue
+        end
+        for m1 = 1:m_max, m2 = 1:m_max
+            h1 = r1/(p1*m1*8)
+            h2 = r2/(p2*m2*8)
+            if (max(h1, h2)/min(h1, h2) < 1.2) && (abs(sqrt(h1*h2)-rh) < 0.5)
+                push!(l, (p1, m1, p2, m2))
+            end
         end
     end
     np = map(_x->_x[1]*_x[3], l)
@@ -23,27 +29,23 @@ C0 = pi*6371.0/180.0
 cutmodeldir = abspath(@__DIR__, "..", "..", "VelocityModel")
 velmodelpath = abspath(@__DIR__, "..", "..", "VelocityModel", "CVM2.bin")
 
-# basicRootDir = @__DIR__
-# range_north = 50.0
-# range_east = 50.0
-# range_depth = 30.0
-pml_thickness = 5.0
-station_range = ["STATION" 30.0 100.0 28.0 32.0 98.0 102.0]
+pml_thickness = 20.0
+station_range = ["STATION" 30.0 100.0 29.0 31.0 99.0 101.0]
 
 margin = 10.0
 dt = 0.1
 fddh = 0.5
 dx = 5.0
-dz = 1.0
-npts = 1800
-rt = 1.0
+dz = 0.1
+npts = 900
+rt = 4.0
 zmin = -8.0
 zmax = 100.0
 garea_dx = 0.5
 gdx = 2.0
 gdz = 1.0
-gzmax = 50.0
-mesh_h = 2.0
+gzmax = 30.0
+mesh_h = 5.0
 
 s = 1 # index of station_range, useful when there are multiple stations.
 
@@ -52,7 +54,7 @@ maxx = (station_range[s, 5] - station_range[s, 2])*C0 + margin |> ceil
 miny = (station_range[s, 6] - station_range[s, 3])*C0*cosd(station_range[s, 2]) - margin |> floor
 maxy = (station_range[s, 7] - station_range[s, 3])*C0*cosd(station_range[s, 2]) + margin |> ceil
 modelrange = [maxx-minx, maxy-miny, zmax]
-t = proc_multi(modelrange[1], modelrange[2], mesh_h)
+t = proc_multi(modelrange[1], modelrange[2], mesh_h, round(Int, Sys.CPU_THREADS/2))
 
 wkdir = abspath(pwd(), station_range[s, 1])
 
@@ -73,7 +75,7 @@ config = Dict(
     "nproc_eta" => t[1],
     "xi_multiply" => t[4],
     "eta_multiply" => t[2],
-    "step_multiply" => 20,
+    "step_multiply" => 10,
     "irregular_mesh" => true,
     "surface" => [8],
     "tlib_h" => fddh,
@@ -106,7 +108,7 @@ open(abspath(wkdir, "setting.toml"), "w") do io
     TOML.print(io, config; sorted=true)
 end
 
-cmd1 = Cmd(["julia", "-t", "63", joinpath(cutmodeldir, "genmodel.jl"),
+cmd1 = Cmd(["julia", "-t", string(Sys.CPU_THREADS-1), joinpath(cutmodeldir, "genmodel.jl"),
     "-D", string(zmax),
     "-H", string(-zmin),
     "-M", velmodelpath,
