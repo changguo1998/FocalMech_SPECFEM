@@ -52,14 +52,14 @@ end
 
 function ReceiverGroup(n::Tuple{<:Real,<:Real,<:Real},
     e::Tuple{<:Real,<:Real,<:Real},
-    d::Tuple{<:Real,<:Real,<:Real}, 
+    d::Tuple{<:Real,<:Real,<:Real},
     id::Integer=1)
     return ReceiverGroup(Float64.(n), Float64.(e), Float64.(d), Int(id))
 end
 
 function ReceiverGroup(nstart::Real, nlen::Integer, nstop::Real,
     estart::Real, elen::Integer, estop::Real,
-    dstart::Real, dlen::Integer, dstop::Real, 
+    dstart::Real, dlen::Integer, dstop::Real,
     id::Integer=1)
     return ReceiverGroup((Float64(nstart), Float64((nstop - nstart) / (nlen - 1)), Float64(nstop)),
         (Float64(estart), Float64((estop - estart) / (elen - 1)), Float64(estop)),
@@ -68,7 +68,7 @@ end
 
 function ReceiverGroup(nstart::Real, Δn::AbstractFloat, nstop::Real,
     estart::Real, Δe::AbstractFloat, estop::Real,
-    dstart::Real, Δd::AbstractFloat, dstop::Real, 
+    dstart::Real, Δd::AbstractFloat, dstop::Real,
     id::Integer=1)
     return ReceiverGroup((Float64(nstart), Float64(Δn), Float64(nstop)),
         (Float64(estart), Float64(Δe), Float64(estop)),
@@ -76,7 +76,7 @@ function ReceiverGroup(nstart::Real, Δn::AbstractFloat, nstop::Real,
 end
 
 function show(io::IO, r::ReceiverGroup)
-    @printf(io, "%d (%g:%g:%g, %g:%g:%g, %g:%g:%g)", r.id, r.n[1], r.n[2], r.n[3], r.e[1], r.e[2], r.e[3], 
+    @printf(io, "%d (%g:%g:%g, %g:%g:%g, %g:%g:%g)", r.id, r.n[1], r.n[2], r.n[3], r.e[1], r.e[2], r.e[3],
         r.d[1], r.d[2], r.d[3])
     return nothing
 end
@@ -480,22 +480,32 @@ function stationnumber(ix::Int, iy::Int, iz::Int, Lx::Int, Ly::Int, Lz::Int)
     return (iz - 1) * Lx * Ly + (iy - 1) * Lx + ix
 end
 
+@inline function _range_length(a::Real, s::Real, b::Real)
+    return floor(Int, (b-a)/s) + 1
+end
+
 function stationtable(rcv::Vector{ReceiverGroup})
     nrcv = map(rcv) do r
-        nn = floor(Int, (r.n[3] - r.n[1]) / r.n[2]) + 1
-        ne = floor(Int, (r.e[3] - r.e[1]) / r.e[2]) + 1
-        nd = floor(Int, (r.d[3] - r.d[1]) / r.d[2]) + 1
+        # nn = floor(Int, (r.n[3] - r.n[1]) / r.n[2]) + 1
+        # ne = floor(Int, (r.e[3] - r.e[1]) / r.e[2]) + 1
+        # nd = floor(Int, (r.d[3] - r.d[1]) / r.d[2]) + 1
+        nn = _range_length(r.n[1], r.n[2], r.n[3])
+        ne = _range_length(r.e[1], r.e[2], r.e[3])
+        nd = _range_length(r.d[1], r.d[2], r.d[3])
         nn*ne*nd
     end
     table = zeros(Int, sum(nrcv), 5)
     p = 0
     for r in rcv
-        ys = r.n[1]:r.n[2]:r.n[3]
-        xs = r.e[1]:r.e[2]:r.e[3]
-        zs = r.d[1]:r.d[2]:r.d[3]
-        Lx = length(xs)
-        Ly = length(ys)
-        Lz = length(zs)
+        # ys = r.n[1]:r.n[2]:r.n[3]
+        # xs = r.e[1]:r.e[2]:r.e[3]
+        # zs = r.d[1]:r.d[2]:r.d[3]
+        # Lx = length(xs)
+        # Ly = length(ys)
+        # Lz = length(zs)
+        Ly = _range_length(r.n[1], r.n[2], r.n[3])
+        Lx = _range_length(r.e[1], r.e[2], r.e[3])
+        Lz = _range_length(r.d[1], r.d[2], r.d[3])
         for iy = 1:Ly, ix = 1:Lx, iz = 1:Lz
             p += 1
             table[p, 1] = p
@@ -691,7 +701,7 @@ function loadshotsetting(path::AbstractString)
     end
     rcv = ReceiverGroup[]
     for t in SETTING["receiver"]
-        r = ReceiverGroup(t["n"][1], t["n"][2], t["n"][3], 
+        r = ReceiverGroup(t["n"][1], t["n"][2], t["n"][3],
                         t["e"][1], t["e"][2], t["e"][3],
                         t["d"][1], t["d"][2], t["d"][3], t["id"])
         push!(rcv, r)
@@ -923,9 +933,9 @@ function readshot!(s::ShotSetting, H::AbstractArray)
     NPROC = length(filter(t->startswith(t, "proc") && endswith(t, "specinfo.bin"), readdir(dir1)))
     (_, _, NSPEC, _, NGLL, NREC, spec2glob, rec2spec, l, network, station, hp, νr) = open(readglob, gfile)
     for iproc = 1:NPROC
-        (_, _, LREC, _, lglob2glob, lrec2rec, ξr, ηr, γr) = open(readlocalhead, 
+        (_, _, LREC, _, lglob2glob, lrec2rec, ξr, ηr, γr) = open(readlocalhead,
             joinpath(dir2, @sprintf("proc%06dlocalinterp.bin", iproc-1)))
-        (NDIM, NT, LGLOB, lveloc) = open(readlocalfield, 
+        (NDIM, NT, LGLOB, lveloc) = open(readlocalfield,
             joinpath(dir1, @sprintf("proc%06ddispl.bin", iproc-1)))
         id = zeros(Int, LREC)
         Threads.@threads for irl = 1:LREC
