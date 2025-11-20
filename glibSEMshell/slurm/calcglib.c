@@ -585,7 +585,7 @@ Int64Vec hdr_decode_station_id(Header_global ghdr){
     char strbuff[MAX_NETWORK_LEN+MAX_STATION_LEN+1] = { '\0' };
     ivec64_init(&iv);
     iv = ivec64_alloc((int64)ghdr.nrec);
-#pragma omp parallel for default(none) private(i, j, k, l, strbuff, v) shared(ghdr, glibio_digits, iv, glibio_K)
+#pragma omp parallel for default(none) private(i, j, k, l, strbuff, v) shared(ghdr, iv)
     for(i = 0; i<ghdr.nrec; i++){
         for(j = 0; j<MAX_NETWORK_LEN; j++) strbuff[j] = ghdr.network[i][j];
         for(j = 0; j<MAX_STATION_LEN; j++) strbuff[j+MAX_NETWORK_LEN] = ghdr.station[i][j];
