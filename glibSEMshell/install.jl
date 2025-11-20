@@ -11,6 +11,9 @@ macro runcmd_noinfo(cmd)
 end
 
 if !islink("sem-code/external_libs/scotch")
+    if isdir("sem-code/external_libs/scotch")
+        rm("sem-code/external_libs/scotch"; recursive=true)
+    end
     symlink(abspath("sem-code/external_libs/scotch_5.1.12b/"), abspath("sem-code/external_libs/scotch"), dir_target=true)
 end
 
