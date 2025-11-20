@@ -1,5 +1,6 @@
 .vscode/
-glibSEMshell/NLLOCshell/NonLinLoc/*
+glibSEMshell/NLLOCshell/NonLinLoc/
+glibSEMshell/NLLOCshell/nllocexec/
 *.tar.gz
 VelocityModel/*.bin
 VelocityModel/*.zip
