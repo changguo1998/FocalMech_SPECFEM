@@ -25,7 +25,7 @@ else
     mkpath(sem_exec_path);
 end
 
-cmdstr = [joinpath(@__DIR__, "sem-code", "configure"), "FC=gfortran", "CC=gcc",
+cmdstr = ["sh", joinpath(@__DIR__, "sem-code", "configure"), "FC=gfortran", "CC=gcc",
     "MPIFC=mpif90", "--with-mpi", "--prefix="*sem_exec_path];
 cmd = Cmd(cmdstr);
 
