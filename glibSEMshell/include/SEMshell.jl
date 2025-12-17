@@ -674,8 +674,15 @@ function writemainpar(s::ShotSetting)
 end
 
 function loadshotsetting(path::AbstractString)
+    if !isfile(path)
+        error("File not found: $path")
+    end
     SETTING = TOML.parsefile(path)
-    wkdir = abspath(SETTING["wkdir"])
+    # wkdir = abspath(SETTING["wkdir"])
+    wkdir = let
+        t = splitdir(path)
+        abspath(t[1])
+    end
     pml = SETTING["pml"]
     nproc_ξ = SETTING["nproc_xi"]
     nproc_η = SETTING["nproc_eta"]
@@ -725,7 +732,7 @@ function loadshotsetting(path::AbstractString)
             SETTING["amp"],
             SETTING["risetime"],
             SETTING["modelrange"],
-            SETTING["modelfile"],
+            abspath(wkdir, "model.bin"),
             pml,
             [SETTING["modelrange"][1] / 2.0, 1.0, SETTING["modelrange"][1] / 2.0],
             [SETTING["modelrange"][2] / 2.0, 1.0, SETTING["modelrange"][2] / 2.0],
@@ -749,7 +756,7 @@ function loadshotsetting(path::AbstractString)
             SETTING["amp"],
             SETTING["risetime"],
             SETTING["modelrange"],
-            SETTING["modelfile"],
+            abspath(wkdir, "model.bin"),
             pml,
             rcv))
     return shotsetting
